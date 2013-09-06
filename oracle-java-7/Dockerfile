@@ -6,7 +6,7 @@
 
 FROM ubuntu:12.04
 
-MAINTAINER Randy D. Wallace Jr.
+MAINTAINER Randy D. Wallace Jr. <randy@randywallace.com>
 
 RUN apt-get update && apt-get install -y python-software-properties
 RUN add-apt-repository ppa:webupd8team/java

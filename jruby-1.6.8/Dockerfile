@@ -9,6 +9,8 @@
 # This image matches the oracle-java-6 Dockerfile
 FROM oracle-java-6
 
+MAINTAINER Randy D. Wallace Jr. <randy@randywallace.com>
+
 ADD http://jruby.org.s3.amazonaws.com/downloads/1.6.8/jruby-bin-1.6.8.tar.gz /opt/jruby.tar.gz
 RUN cd /opt && tar xvvf jruby.tar.gz && rm jruby.tar.gz
 RUN update-alternatives --install "/usr/bin/ruby" "ruby" "/opt/jruby-1.6.8/bin/jruby" 1
