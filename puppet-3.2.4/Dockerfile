@@ -20,4 +20,3 @@ RUN cd /opt && tar xvvf puppet-3.2.4.tar.gz
 RUN cd /opt/facter-1.7.2 && ./install.rb
 RUN cd /opt/puppet-3.2.4 && ./install.rb
 RUN puppet resource group puppet ensure=present && puppet resource user puppet ensure=present gid=puppet shell='/sbin/nologin'
-
