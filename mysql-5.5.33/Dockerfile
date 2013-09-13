@@ -1,6 +1,6 @@
 ########
 #
-# Dockerfile which sets up the latest stable ruby-2.0.0 installation
+# Dockerfile which sets up the latest stable MySQL 5.5.33 installation
 #
 ########
 
