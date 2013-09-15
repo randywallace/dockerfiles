@@ -4,6 +4,8 @@
 #
 # Uses MySQL Installation from Dockerfile in this repo
 #
+# Still a work in progress...
+#
 ########
 
 FROM ubuntu:12.04
