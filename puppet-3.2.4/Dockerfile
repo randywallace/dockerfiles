@@ -1,6 +1,6 @@
 ########
 #
-# Dockerfile which sets up a ruby-1.9.3-p448 installation (this is the latest patch)
+# Dockerfile which sets up a puppet installation
 #
 # Also installs facter 1.7.2
 #
