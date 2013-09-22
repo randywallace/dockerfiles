@@ -23,4 +23,4 @@ RUN cd /opt/mysql && ./scripts/mysql_install_db && chown -R mysql:mysql ./*
 RUN cd /opt/mysql && (./bin/mysqld_safe ) & /secure_install.sh && /opt/mysql/bin/mysqladmin -u root -p'' shutdown
 
 ENTRYPOINT ["/mysql.server", "start"]
-EXPOSE 3306
+EXPOSE 3306:3306
