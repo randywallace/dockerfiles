@@ -1,15 +1,18 @@
 Elasticsearch 0.90.5 Dockerfile
--------------------------------
+===============================
 
 This build does several things.
 
-installs the following plugins:
+It installs the following plugins:
 
 - River JDBC 2.0.2
 - Head
 - Bigdesk
 
-Requires an ubuntu:12.04 image with a java 7 installation and `JAVA_HOME` set (See Dockerfile).
+Requirements
+------------
+
+The dockerfile requires an ubuntu:12.04 image with a java 6/7 installation and `JAVA_HOME` set (See Dockerfile).
 Elasticsearch should work equally well with OpenJDK and Oracle.
 
 Elasticsearch requires a higher open file limit.  Set this in /etc/init/docker.conf to taste
@@ -20,11 +23,13 @@ for how to set this):
 limit nofile 262144 262144
 ```
 
-Autogenerates the elasticsearch.yml at startup
+Configuration at runtime
+------------------------
+
+run_elasticsearch.sh autogenerates the elasticsearch.yml at startup
 which allows the following settings:
 
-Cluster Name
-++++++++++++
+### Cluster Name
 
 Set the name of the cluster (not the node name)
 
@@ -33,8 +38,7 @@ Flag: -n <string>
 Default: elasticsearch
 ```
 
-Master
-++++++
+### Master
 
 Whether or not this instance can elect to be a Master Node
 
@@ -43,8 +47,7 @@ Flag: -m <true/false>
 Default: false
 ```
 
-Data
-++++
+### Data
 
 Whether or not this instance can store index data
 
@@ -53,8 +56,7 @@ Flag: -d <true/false>
 Default: false
 ```
 
-Publish Host IP
-+++++++++++++++
+### Publish Host IP
 
 For the cluster to find itself across docker servers,
 you gotta tell it the public facing IP of the docker server.
@@ -65,8 +67,7 @@ Flag: -p <IP Address>
 Default: 127.0.0.1
 ```
 
-Logstash Master Hostname/IP
-+++++++++++++++++++++++++++
+### Logstash Master Hostname/IP
 
 If the instance is expected to join an existing cluster,
 give the hostname/IP of a master in the cluster.  This mitigates
@@ -81,8 +82,7 @@ Flag: -h <hostname/IP>
 Default: 127.0.0.1
 ```
 
-HEAP SIZE
-+++++++++
+### Heap Size
 
 ```
 Flag: -s <Heap size>
