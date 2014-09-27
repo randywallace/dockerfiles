@@ -9,7 +9,7 @@ ENV LANGUAGE en_US.UTF-8
 RUN apt-get -y update ;\
     apt-get -y upgrade ;\
     locale-gen en_US en_US.UTF-8 ;\
-    dpkg-reconfigure locales 
+    dpkg-reconfigure locales
 
 RUN apt-get -y install git wget build-essential autoconf bison libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev
 
@@ -30,7 +30,7 @@ USER postgres
 
 RUN service postgresql start &&\
     psql --command "CREATE USER root WITH SUPERUSER PASSWORD '';" &&\
-    createdb -O root asciinema_production ;\
+    createdb -O root asciinema_production &&\
     createdb -O root asciinema_development ;\
     service postgresql stop
 
