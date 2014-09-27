@@ -28,13 +28,13 @@ upstream unicorn {
 }
 
 #server {
-#  server_name www.phindee.com;
-#  return 301 \$scheme://phindee.com\$request_uri;
+#  server_name www.${FQDN};
+#  return 301 \$scheme://${FQDN}\$request_uri;
 #}
 
 server {
   listen ${PORT} default deferred;
-  #server_name phindee.com;
+  #server_name ${FQDN};
   root /opt/asciinema.org/public;
 
  location ^~ /assets/ {
