@@ -45,7 +45,7 @@ RUN cd /opt ;\
     RAILS_ENV='production' bundle exec rake db:setup ;\
     service postgresql stop 
 
-RUN apt-get install -y redis-server
+RUN apt-get install -y redis-server nginx
 
 ADD startup.sh /startup.sh
 
