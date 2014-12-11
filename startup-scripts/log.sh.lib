@@ -1,0 +1,79 @@
+# vim: ft=sh 
+
+###
+# ENV Overrides:
+#
+# SYSLOG: true/false ; Default true
+#
+# HOST_SYSLOG_DAEMON: IP_ADDRESS/HOSTNAME ; Defaults to syslog --link alias or gateway IP
+#
+# FACILITY: kern|user|mail|daemon|auth|syslog|lpr|news|uucp|authpriv|ftp|cron|local{0-7} ; Default user
+#
+# TEE_OUTPUT: true/false ; Defaults to false
+#
+###
+
+_enable_syslog=${SYSLOG:-true}
+
+if host syslog > /dev/null 2>&1; then
+  ____links_syslog_host=$(host syslog | head -n 1 | cut -f 4)
+  _host_syslog_daemon="${HOST_SYSLOG_DAEMON:-$____links_syslog_host}"
+else
+  ____gateway_ip=$(ip route | grep default | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
+  _host_syslog_daemon="${HOST_SYSLOG_DAEMON:-$____gateway_ip}"
+fi
+
+_facility="${FACILITY:-user}"
+
+_syslog_and_stdout_stderr=${TEE_OUTPUT:-true} 
+
+__syslog_logger() {
+  local LEVEL=${1:-info}
+  sed -u -r -e 's/\\n/ /g' -e 's/\s\-{3,}/;/g' -e 's/\-{3,}\s//g' |\
+    /usr/bin/logger -p ${_facility}.${LEVEL}  -t "${APP_NAME}[$$]" -n "${_host_syslog_daemon}"
+}
+
+__console_logger() {
+  awk -v DT="$(date +%Y-%m-%dT%T%:z)" '{print DT, $0; fflush(); }' 1>&3
+}
+
+run_logger() {
+  if $_enable_syslog; then
+    if $_syslog_and_stdout_stderr; then
+      tee -a >(__syslog_logger $1) >(__console_logger) > /dev/null 2>&1
+    else
+      __syslog_logger $1
+    fi
+  else
+    __console_logger
+  fi
+}
+
+# Prevent redirection loop
+exec 3>&1
+# Catch all STDOUT and STDERR traffic
+exec 1> >(awk '{ print "STDOUT:", $0; fflush(); }' | run_logger info)
+exec 2> >(awk '{ print "STDERR:", $0; fflush(); }' | run_logger err)
+
+log()      { echo "INFO: $*"      | run_logger info   ; }
+error()    { echo "ERROR: $*"     | run_logger err    ; }
+critical() { echo "EMERGENCY: $*" | run_logger emerg  ; }
+alert()    { echo "ALERT: $*"     | run_logger alert  ; }
+notice()   { echo "NOTICE: $*"    | run_logger notice ; }
+debug()    { echo "DEBUG: $*"     | run_logger debug  ; }
+warning()  { echo "WARN: $*"      | run_logger warn   ; }
+
+log_stdin()      { while read line; do echo "INFO: $line"      | run_logger info;   done; }
+error_stdin()    { while read line; do echo "ERROR: $line"     | run_logger err;    done; }
+critical_stdin() { while read line; do echo "EMERGENCY: $line" | run_logger emerg;  done; }
+alert_stdin()    { while read line; do echo "ALERT: $line"     | run_logger alert;  done; }
+notice_stdin()   { while read line; do echo "NOTICE: $line"    | run_logger notice; done; }
+debug_stdin()    { while read line; do echo "DEBUG: $line"     | run_logger debug;  done; }
+warning_stdin()  { while read line; do echo "WARN: $line"      | run_logger warn;   done; }
+
+info()       { log "$*"      ; }
+warn()       { warning "$*"  ; }
+info_stdin() { log_stdin     ; }
+warn_stdin() { warning_stdin ; }
+
+

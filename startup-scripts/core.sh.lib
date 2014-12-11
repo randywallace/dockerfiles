@@ -1,0 +1,107 @@
+# vim: ft=sh 
+
+###
+# ENV Overrides:
+#
+# see log.sh.lib
+set -e
+set -o errtrace
+set -o functrace
+
+
+CURDIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+source "${CURDIR}/log.sh.lib"
+
+__set_nested_func() { NESTED_FUNCTION="${NESTED_FUNCTION:-${FUNCNAME[2]}}"; }
+__set_exit_status() { EXIT_STATUS="${EXIT_STATUS:-2}"; }
+
+ok_die()   { EXIT_STATUS=0; __set_nested_func; info     "${NESTED_FUNCTION}(): $*"; __die; }
+warn_die() { EXIT_STATUS=1; __set_nested_func; warning  "${NESTED_FUNCTION}(): $*"; __die; }
+crit_die() { EXIT_STATUS=2; __set_nested_func; critical "${NESTED_FUNCTION}(): $*"; __die; }
+die()      { __set_nested_func; crit_die "$*"; }
+__die() { __backtrace; __cleanup; exit $EXIT_STATUS; }
+
+__handle_err() {
+  __prev_cmd_exit=${__previous_command} __exit_status=${1:-$?}
+  __set_nested_func 
+  crit_die "[${__prev_cmd_exit}] ($(readlink -f "${BASH_SOURCE[1]}"):${BASH_LINENO[0]}) failed with an exit status of ${__exit_status}" 
+}
+
+__handle_exit() {
+  __prev_cmd_exit=${__previous_command} __exit_status=${1:-$?}
+  if [[ -x $__err_thrown ]]; then
+    __set_nested_func 
+    crit_die "[${__prev_cmd_exit}] ($(readlink -f "${BASH_SOURCE[1]}"):${BASH_LINENO[0]}) failed with an exit status of ${__exit_status}" 
+  fi
+}
+
+check_data() {
+  __prev_cmd_exit=${__previous_command}
+  local DATA="$*"
+  if [[ "${DATA}x" = "x" ]]; then 
+    __set_nested_func 
+    crit_die "[${__prev_cmd_exit}] (${BASH_SOURCE[1]}:${BASH_LINENO[0]}) was passed no data or a process returned nothing... exiting"
+  fi
+}
+
+__backtrace() {
+  unset FUNCNAME[0]
+  typeset -i i=0
+  for func in "${FUNCNAME[@]}"; do
+    debug "  ${i}: ${func} ${BASH_SOURCE[$(( $i + 1 ))]}:${BASH_LINENO[$(( $i ))]}"
+    let i++ || true
+  done
+  IFS=$'\n'
+  for env_var in $(grep -Fxv -f <(env) <(set -o posix; set) | grep -Ev '^LS_COLORS|^LESS_TERMCAP|^GREP|^BASH|^IFS|^LESSOPEN|^DIRSTACK|^GROUP|^SHELLOPTS|^_=|^PS4|^FUNCNAME' | grep '='); do
+    debug ${env_var}
+  done
+  unset IFS
+}
+
+fn_exists()
+{
+  declare -f -F $1 > /dev/null
+  return $?
+}
+
+__cleanup() {
+  log "exiting..."
+  __err_thrown=true
+}
+
+trap '__handle_err' ERR
+trap '__handle_exit' EXIT
+trap __die SIGINT SIGKILL
+trap '__previous_command=$__this_command; __this_command=$BASH_COMMAND' DEBUG
+
+#### ERATTA
+
+#send_to_sensu() {
+#  if [[ -z "$EXIT_STATUS" ]]; then
+#    EXIT_STATUS=0
+#  fi
+#  echo "Sending $(basename $0) ${LAST_MESSAGE} to sensu"
+#  local OUTPUT_DESTINATION='/dev/tcp/localhost/3030'
+#  local CHECK_NAME=$( echo -n "check_${APP_NAME}" | tr -d [:cntrl:] | sed 's/[^A-Za-z0-9_.-]/_/g' )
+#  local CHECK_RESULT=$( echo $LAST_MESSAGE | sed 's@\([\"]\)@\\\\\1@g' )
+#  echo -e "{
+#  \"name\": \"$CHECK_NAME\",
+#  \"output\": \"$CHECK_RESULT\",${EXTRA_JSON}${HANDLERS}
+#  \"status\": $EXIT_STATUS
+#}" >$OUTPUT_DESTINATION
+#}
+#
+#send_to_sensu_uncaught_error() {
+#  EXIT_STATUS=2
+#  send_to_sensu
+#}
+#
+#cleanup() {
+#  
+#}
+#
+#trap cleanup SIGINT SIGKILL
+
+#trap send_to_sensu EXIT
+#
+#trap send_to_sensu_uncaught_error ERR
